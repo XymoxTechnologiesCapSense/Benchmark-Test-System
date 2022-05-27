@@ -1,0 +1,9 @@
+# mXT1066T2 INFO:
+# port_#006.Hub_#0003
+# Manufacturer name: Atmel Corp.
+# Device name: QRG-I/F
+
+# if its a bridge chip, communicate with 5 bytes, 6 otherwise
+# Family ID: 0xA4
+# Variant ID: 0x0B
+# READ returns unsigned bytes

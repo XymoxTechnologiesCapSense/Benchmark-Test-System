@@ -1,0 +1,64 @@
+        #####################################################################################
+        # PARAMETER NOTES:
+        #####################################################################################
+        # GENERAL NOTES:
+        #
+        # When reading a message using PYUSB, the length of the message read *MUST* be 64.
+        # Why is that? I have no idea, but I spent 3 days trying to read from this board only
+        # to stumble upon this solution, so take some dumb 64 variable for length instead of
+        # needing to search for poorly documented, half-functioning solutions.
+        # The fact I stumbled upon it was a miracle in it of itself.
+        #
+        # Last 3 parameters of written message are the
+        # same as 2, 3, and 4 respectively on the read return
+        #
+        #
+        #####################################################################################
+        # COMMAND_ID PARAMETER:
+        # index 0 (parameter 1 of a send message) has a range of 0x50-0x53 (next values 0x4F under and
+        # 0x54 over do not get processed and cause a runtime error)
+        #####################################################################################
+        # NumWx (write) PARAMETER:
+        # Index 1 (parameter 2 of a len(5) list message) dictates how many bytes to write after
+        # the second index of the return message.
+        #
+        #                                         | (decimal 2)
+        #                                         V
+        # EX1: send (write) message --> [0x51, 0x02, 0x07, 0xFC, 0x06]
+        # and you get back:
+        #                 [2, 7, 252, 6, 0, 0, 0, 0, 0, 79, 97, 247, ...
+        #                          1  2  zeros------->  begin return
+        #                 the message wrote 2 bytes after index 1 of the message
+        #
+        #                                         | (decimal 4)
+        #                                         V
+        # EX2: send (write) message --> [0x51, 0x04, 0x07, 0xFC, 0x06]
+        # and you get back:
+        #                 [2, 7, 252, 6, 87, 192, 0, 0, 0, 79, 97, 247, ...
+        #                          1  2   3    4  zeros-->  begin return
+        #
+        #####################################################################################
+        # NumRx (read) PARAMETER:
+        # index 2 (parameter 3)'s size in decimal moves the read return by that amount
+        #
+        #                                      |
+        # of 0's from its point.               V (decimal 3)
+        # EX1:                 [0x51, 0x02, 0x03, 0xFC, 0x06]
+        # gives this answer:   [2, 3, 252, 6, 0, 22, 137, ....
+        #                               1  2  3  !begin nums!
+        #
+        #                                      |
+        #                                      V (decimal 16)
+        # EX2:                 [0x51, 0x02, 0x10, 0xFC, 0x06]
+        #                      [2, 16, 252, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 209, 206, 195, ....
+        #                                1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16  !begin nums!
+        #####################################################################################
+        # Address parameters:
+        # the last 2 parameters (indices 3 & 4) of a message being switched did not seem to affect the output?
+        # Other than the address return changing (the 6 and 252 in this example switched, but the
+        # data beyond that remained the same)
+        #        test1:     [0x51, 0x02, 0x05, 0x06, 0xFC]
+        # test1 output:     [2, 5, 6, 252, 0, 0, 0, 181, 142, 18, 253, 68, 203, 100, 79, 123, ...
+        #        test2:     [0x51, 0x02, 0x05, 0xFC, 0x06]
+        # test1 output:     [2, 5, 252, 6, 0, 0, 0, 181, 142, 18, 253, 68, 203, 100, 79, 123, ...
+        #####################################################################################
